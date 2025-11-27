@@ -10,7 +10,9 @@ use tower::ServiceBuilder;
 use hex::FromHex;
 
 mod middlewares;
-use middlewares::verify_signature;
+mod interactions;
+
+use crate::middlewares::{verify_signature,logging_middleware};
 
 #[derive(Clone)]
 struct AppState {
@@ -46,7 +48,11 @@ async fn main() {
         .route("/",post(pong))
         .layer(ServiceBuilder::new().layer(
             middleware::from_fn_with_state(state, verify_signature)
-        ));
+        ))
+        .layer(
+            ServiceBuilder::new()
+                .layer(middleware::from_fn(logging_middleware))
+        );
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

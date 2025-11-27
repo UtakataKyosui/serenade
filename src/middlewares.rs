@@ -5,7 +5,7 @@ use axum::{
     extract::State,
     http::StatusCode,
     middleware::Next,
-    response::IntoResponse
+    response::{IntoResponse, Response}
 };
 use hex::FromHex;
 use ed25519_dalek::Signature;
@@ -85,4 +85,12 @@ pub async fn verify_signature(
 
     // Next に渡す（これが handler に到達する）
     Ok(next.run(req).await.into_response())
+}
+
+pub async fn logging_middleware(    
+    req: Request<Body>,
+    next: Next 
+)-> Response {
+    println!("Received request: {} {}", req.method(), req.uri().path());
+    next.run(req).await
 }
