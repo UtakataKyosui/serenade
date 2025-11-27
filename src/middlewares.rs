@@ -87,10 +87,29 @@ pub async fn verify_signature(
     Ok(next.run(req).await.into_response())
 }
 
-pub async fn logging_middleware(    
+pub async fn guild_initialize_command(
+    State(state): State<super::AppState>,
     req: Request<Body>,
-    next: Next 
-)-> Response {
-    println!("Received request: {} {}", req.method(), req.uri().path());
+    next: Next
+) -> Response{
+    let commands = state.commands.clone();
+    let application_id = std::env::var("DISCORD_APPLICATION_ID")
+        .expect("DISCORD_APPLICATION_ID must be set");
+    let guild_id = std::env::var("DISCORD_GUILD_ID")
+        .expect("DISCORD_GUILD_ID must be set");
+
+    let _  = commands.iter().map(async |command| {
+        let url = format!("{}/applications/{}/guilds/{}/commands",
+            crate::constants::DISCORD_API_BASE_URL,
+            application_id,
+            guild_id
+        );
+
+        reqwest::Client::new()
+            .post(url)
+            .json(command)
+            .send()
+            .await.unwrap();
+    });
     next.run(req).await
 }
