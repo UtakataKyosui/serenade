@@ -8,6 +8,7 @@ use serde::{Serialize,
 use ed25519_dalek::SigningKey;
 use tower_http::{trace::TraceLayer};
 use tower::{Layer, ServiceBuilder};
+use shuttle_axum::ShuttleAxum;
 use hex::FromHex;
 
 mod middlewares;
@@ -29,8 +30,9 @@ struct PongResponse {
     r#type: i8
 }
 
-#[tokio::main]
-async fn main() {
+// #[tokio::main]
+#[shuttle_runtime::main]
+async fn main() -> ShuttleAxum {
     dotenvy::dotenv().ok();
     dotenvy::from_filename(".env.local").ok();
 
@@ -62,8 +64,9 @@ async fn main() {
         ));
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    // let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    // axum::serve(listener, app).await.unwrap();
+    Ok(app.into())
 }
 
 async fn pong() -> impl IntoResponse{
