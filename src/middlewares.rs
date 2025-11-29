@@ -1,27 +1,31 @@
-use std::{convert::Infallible, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    convert::Infallible,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use axum::{
     body::{to_bytes, Body},
     extract::State,
     http::StatusCode,
     middleware::Next,
-    response::{IntoResponse, Response}
+    response::IntoResponse,
 };
-use hex::FromHex;
 use ed25519_dalek::Signature;
-use hyper::{Request};
-
+use hex::FromHex;
+use hyper::Request;
 
 pub async fn verify_signature(
     State(state): State<super::AppState>,
     req: Request<Body>,
-    next: Next
+    next: Next,
 ) -> Result<impl IntoResponse, Infallible> {
     // 必要ヘッダ取得
     let sig_hex = match req.headers().get("X-Signature-Ed25519") {
         Some(v) => match v.to_str() {
             Ok(s) => s.to_string(),
-            Err(_) => return Ok((StatusCode::UNAUTHORIZED, "invalid signature header").into_response()),
+            Err(_) => {
+                return Ok((StatusCode::UNAUTHORIZED, "invalid signature header").into_response())
+            }
         },
         None => return Ok((StatusCode::UNAUTHORIZED, "missing signature header").into_response()),
     };
@@ -29,7 +33,9 @@ pub async fn verify_signature(
     let timestamp = match req.headers().get("X-Signature-Timestamp") {
         Some(v) => match v.to_str() {
             Ok(s) => s.to_string(),
-            Err(_) => return Ok((StatusCode::UNAUTHORIZED, "invalid timestamp header").into_response()),
+            Err(_) => {
+                return Ok((StatusCode::UNAUTHORIZED, "invalid timestamp header").into_response())
+            }
         },
         None => return Ok((StatusCode::UNAUTHORIZED, "missing timestamp header").into_response()),
     };
@@ -37,14 +43,19 @@ pub async fn verify_signature(
     let (parts, body) = req.into_parts();
 
     // 本文を全部読む（後で再利用できるようにバッファに保存して Request を再構築する）
-    let whole_body = match to_bytes(body,usize::MAX).await {
+    let whole_body = match to_bytes(body, usize::MAX).await {
         Ok(b) => b,
-        Err(_) => return Ok((StatusCode::INTERNAL_SERVER_ERROR, "failed to read body").into_response()),
+        Err(_) => {
+            return Ok((StatusCode::INTERNAL_SERVER_ERROR, "failed to read body").into_response())
+        }
     };
 
     // タイムスタンプのリプレイ防止チェック（秒）
     if let Ok(ts_i64) = timestamp.parse::<i64>() {
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
         let diff = (now - ts_i64).abs();
         if diff > state.allowed_clock_skew_secs {
             return Ok((StatusCode::UNAUTHORIZED, "timestamp out of allowed range").into_response());
@@ -70,11 +81,11 @@ pub async fn verify_signature(
     }
 
     let sig_bytes: [u8; 64] = sig_byte.try_into().unwrap();
-    
+
     let signature = Signature::from_bytes(&sig_bytes);
 
     // 検証実行
-    if let Err(_) = state.pub_key.verify(&message, &signature) {
+    if state.pub_key.verify(&message, &signature).is_err() {
         return Ok((StatusCode::UNAUTHORIZED, "signature verification failed").into_response());
     }
 
@@ -85,31 +96,4 @@ pub async fn verify_signature(
 
     // Next に渡す（これが handler に到達する）
     Ok(next.run(req).await.into_response())
-}
-
-pub async fn guild_initialize_command(
-    State(state): State<super::AppState>,
-    req: Request<Body>,
-    next: Next
-) -> Response{
-    let commands = state.commands.clone();
-    let application_id = std::env::var("DISCORD_APPLICATION_ID")
-        .expect("DISCORD_APPLICATION_ID must be set");
-    let guild_id = std::env::var("DISCORD_GUILD_ID")
-        .expect("DISCORD_GUILD_ID must be set");
-
-    let _  = commands.iter().map(async |command| {
-        let url = format!("{}/applications/{}/guilds/{}/commands",
-            crate::constants::DISCORD_API_BASE_URL,
-            application_id,
-            guild_id
-        );
-
-        reqwest::Client::new()
-            .post(url)
-            .json(command)
-            .send()
-            .await.unwrap();
-    });
-    next.run(req).await
 }

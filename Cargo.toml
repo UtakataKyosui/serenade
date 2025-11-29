@@ -1,21 +1,27 @@
 [package]
 name = "Serenade"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
-axum = {version = "0.8.7"}
+migration = { path = "./migration" }
+axum = "0.8.7"
 bytes = "1.11.0"
-cargo = "0.92.0"
+chrono = { version = "0.4", features = ["serde"] }
 dotenvy = "0.15.7"
-ed25519-dalek = {version = "2.2.0",features = ["rand_core"]}
+ed25519-dalek = { version = "2.2.0", features = ["rand_core"] }
 hex = "0.4.3"
 hyper = "1.8.1"
 nacl = "0.5.3"
-reqwest = {version = "0.12.24",features = ["json","rustls-tls"]}
+reqwest = { version = "0.12.24", features = ["json", "rustls-tls"] }
+sea-orm = { version = "1.1.3", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono"] }
+sea-orm-migration = { version = "1.1.3", features = ["sqlx-postgres", "runtime-tokio-rustls"] }
 serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0"
 shuttle-axum = "0.57.0"
 shuttle-runtime = "0.57.0"
-tokio = { version = "1.48.0", features = ["macros","rt-multi-thread"] }
+shuttle-shared-db = { version = "0.57.0", features = ["postgres"] }
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
 tower = "0.5.2"
 tower-http = { version = "0.6.7", features = ["trace"] }
+tracing = "0.1"
