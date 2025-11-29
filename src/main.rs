@@ -6,6 +6,7 @@ use axum::{
 use serde::{Serialize, 
     Deserialize};
 use ed25519_dalek::SigningKey;
+use shuttle_runtime::SecretStore;
 use tower_http::{trace::TraceLayer};
 use tower::{Layer, ServiceBuilder};
 use shuttle_axum::ShuttleAxum;
@@ -32,12 +33,19 @@ struct PongResponse {
 
 // #[tokio::main]
 #[shuttle_runtime::main]
-async fn main() -> ShuttleAxum {
+async fn main(
+    #[shuttle_runtime::Secrets] secrets: SecretStore
+) -> ShuttleAxum {
     // dotenvy::dotenv().ok();
-    dotenvy::from_filename(".env.local").ok();
+    // dotenvy::from_filename(".env.local").ok();
 
-    // 環境変数から公開鍵（hex）を読み取る
-    let pk_hex = env::var("DISCORD_PUBLIC_KEY")
+    // // 環境変数から公開鍵（hex）を読み取る
+    // let pk_hex = env::var("DISCORD_PUBLIC_KEY")
+    //     .expect("DISCORD_PUBLIC_KEY must be set (hex-encoded ed25519 public key)");
+    // let pk_bytes = <[u8; 32]>::from_hex(pk_hex.as_str())
+    //     .expect("DISCORD_PUBLIC_KEY must be 32 bytes hex");
+    // let pub_key = SigningKey::from(pk_bytes);
+    let pk_hex = secrets.get("DISCORD_PUBLIC_KEY")
         .expect("DISCORD_PUBLIC_KEY must be set (hex-encoded ed25519 public key)");
     let pk_bytes = <[u8; 32]>::from_hex(pk_hex.as_str())
         .expect("DISCORD_PUBLIC_KEY must be 32 bytes hex");
