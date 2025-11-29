@@ -13,7 +13,6 @@ use shuttle_axum::ShuttleAxum;
 use hex::FromHex;
 
 mod middlewares;
-mod commands;
 mod constants;
 
 use crate::{commands::GuildCommand, middlewares::{guild_initialize_command, verify_signature}};
