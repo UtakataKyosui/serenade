@@ -16,7 +16,7 @@ mod middlewares;
 mod commands;
 mod constants;
 
-use crate::{commands::structs::GuildCommand, middlewares::{guild_initialize_command, verify_signature}};
+use crate::{commands::GuildCommand, middlewares::{guild_initialize_command, verify_signature}};
 
 #[derive(Clone)]
 struct AppState {
