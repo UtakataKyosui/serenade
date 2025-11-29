@@ -33,7 +33,7 @@ struct PongResponse {
 // #[tokio::main]
 #[shuttle_runtime::main]
 async fn main() -> ShuttleAxum {
-    dotenvy::dotenv().ok();
+    // dotenvy::dotenv().ok();
     dotenvy::from_filename(".env.local").ok();
 
     // 環境変数から公開鍵（hex）を読み取る
@@ -47,8 +47,8 @@ async fn main() -> ShuttleAxum {
         pub_key,
         allowed_clock_skew_secs: 300, // 5分
         commands: vec![
-            GuildCommand::new("ping".to_string(), Some("Replies with Pong!".to_string())),
-            GuildCommand::new("hello".to_string(), Some("Replies with Hello, World!".to_string())),
+            guild_command!("ping", "Replies with Pong!"),
+            guild_command!("hello", "Replies with Hello, World!"),
         ],
     };
 
