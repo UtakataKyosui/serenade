@@ -7,13 +7,14 @@ pub struct GuildCommand {
         rename = "type",
         default
     )]
-    r#type: ApplicationCommandType,
-    description: Option<String>
+    r#type: Option<ApplicationCommandType>,
+    description: Option<String>,
+    // application_id: String,
 }
 
 impl GuildCommand {
     pub fn new(name: String, description: Option<String>) -> Self {
-        Self { name, r#type: ApplicationCommandType::ChatInput, description }
+        Self { name, r#type: Some(ApplicationCommandType::ChatInput), description }
     }
 }
 

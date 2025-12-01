@@ -3,6 +3,7 @@ use std::{env, vec};
 use axum::{
     http::StatusCode, middleware, response::IntoResponse, routing::{post}, Json, Router
 };
+use macros::guild_command;
 use serde::{Serialize, 
     Deserialize};
 use ed25519_dalek::SigningKey;
@@ -14,8 +15,8 @@ use hex::FromHex;
 
 mod middlewares;
 mod constants;
-
-use crate::{commands::GuildCommand, middlewares::{guild_initialize_command, verify_signature}};
+use structs::GuildCommand;
+use crate::{middlewares::{guild_initialize_command, verify_signature}};
 
 #[derive(Clone)]
 struct AppState {
